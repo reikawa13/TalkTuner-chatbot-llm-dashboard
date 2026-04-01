@@ -74,7 +74,7 @@ def split_conversation(text, user_identifier="HUMAN:", ai_identifier="ASSISTANT:
 
     return user_messages, assistant_messages
 
-
+## construct the prompt for llama2 format. 
 def llama_v2_prompt(
     messages: list[dict],
     system_prompt=None
@@ -156,12 +156,20 @@ class TextDataset(Dataset):
             file_path = self.file_paths[idx]
             corrupted_file_paths = []
 
+            # pulls out conversation ID from filename like conversation_123_age_adult.txt
             int_idx = file_path[file_path.find("conversation_")+len("conversation_"):]
             int_idx = int(int_idx[:int_idx.find("_")])
             
             with open(file_path, 'r', encoding='utf-8') as f:
                 text = f.read()
                 
+            ## rewrite each raw conversation transcript into the Llama-2 chat prompt format before tokenizing and extracting activations.
+            """
+            Originally it looks like: 
+            HUMAN: ...
+            ASSISTANT: ...
+            HUMAN: ...
+            """
             if self.convert_to_llama2_format:
                 if "### Human:" in text:
                     user_msgs, ai_msgs = split_conversation(text, "### Human:", "### Assistant:")
@@ -182,6 +190,7 @@ class TextDataset(Dataset):
                     
                 if self.if_remove_last_ai_response and messages_dict[-1]["role"] == "assistant":
                     messages_dict = messages_dict[:-1]
+                ## TODO: if we use another model, we may need another function to convert the conversation into the format that it wants internally. 
                 try:
                     text = llama_v2_prompt(messages_dict) 
                 except:
@@ -211,6 +220,7 @@ class TextDataset(Dataset):
             if not self.control_probe:
                 text += f" I think the {prompt_translator[self.label_idf]} of this user is"
             with torch.no_grad():
+                ## tokenized version of the input text
                 encoding = self.tokenizer(
                   text,
                   truncation=True,
@@ -219,11 +229,15 @@ class TextDataset(Dataset):
                   return_tensors='pt'
                 )
                 
+                ## watch every MLP layer and the embedding layer, and 
+                ## save their outputs when the model runs.
                 features = OrderedDict()
                 for name, module in self.model.named_modules():
                     if name.endswith(".mlp") or name.endswith(".embed_tokens"):
                         features[name] = ModuleHook(module)
-                        
+
+                ## Run the model and collect hidden states/internal activations.
+                ## Clean up the temporary hooks immediately afterward.     
                 output = self.model(input_ids=encoding['input_ids'].to("cuda"),
                                     attention_mask=encoding['attention_mask'].to("cuda"),
                                     output_hidden_states=True,
@@ -231,8 +245,9 @@ class TextDataset(Dataset):
                 for feature in features.values():
                     feature.close()
             
+            ## Construct layer-activation pairs for the final (k) token(s) in the input text. 
             last_acts = []
-            if self.if_augmented:
+            if self.if_augmented: # save the last k tokens instead of just the final token's activations. This is for the augmented probe that takes in multiple tokens' activations as input.
                 if self.residual_stream:
                     for layer_num in range(41):
                         last_acts.append(output["hidden_states"][layer_num][:, -self.k:].detach().cpu().clone().to(torch.float))
