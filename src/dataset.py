@@ -221,10 +221,11 @@ class TextDataset(Dataset):
                 text += f" I think the {prompt_translator[self.label_idf]} of this user is"
             with torch.no_grad():
                 ## tokenized version of the input text
+                ## TODO: changed max_length to 512 for testing
                 encoding = self.tokenizer(
                   text,
                   truncation=True,
-                  max_length=2048,
+                  max_length=512,
                   return_attention_mask=True,
                   return_tensors='pt'
                 )
@@ -232,16 +233,26 @@ class TextDataset(Dataset):
                 ## watch every MLP layer and the embedding layer, and 
                 ## save their outputs when the model runs.
                 features = OrderedDict()
-                for name, module in self.model.named_modules():
-                    if name.endswith(".mlp") or name.endswith(".embed_tokens"):
-                        features[name] = ModuleHook(module)
+                # for name, module in self.model.named_modules():
+                #     if name.endswith(".mlp") or name.endswith(".embed_tokens"):
+                #         features[name] = ModuleHook(module)
+                # TODO: changed to load MLP only if needed 
+                features = OrderedDict()
+                if not self.residual_stream:
+                    for name, module in self.model.named_modules():
+                        if name.endswith(".mlp") or name.endswith(".embed_tokens"):
+                            features[name] = ModuleHook(module)
 
                 ## Run the model and collect hidden states/internal activations.
-                ## Clean up the temporary hooks immediately afterward.     
-                output = self.model(input_ids=encoding['input_ids'].to("cuda"),
+                ## Clean up the temporary hooks immediately afterward. 
+                # Skip lm_head: probe training uses hidden states, not next-token logits.
+                # Call the base transformer directly to reduce VRAM use during activation extraction.
+                # changed from self.model(...) to self.model.model(...)
+                output = self.model.model(input_ids=encoding['input_ids'].to("cuda"),
                                     attention_mask=encoding['attention_mask'].to("cuda"),
                                     output_hidden_states=True,
-                                    return_dict=True)
+                                    return_dict=True,
+                                    use_cache=False)
                 for feature in features.values():
                     feature.close()
             
