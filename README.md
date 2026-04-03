@@ -30,6 +30,21 @@ conda activate talktuner-gpu\
 export PYTHONPATH=$PWD:$PWD/src\
 jupyter lab --port=XXXX --no-browser\
 
-Make sure to start the jupyter from the repo root. 
+Make sure to start the jupyter from the repo root. \
+
+To run the notebook overnight, use tmux.
+tmux new -s talktuner\
+cd /local/rkawaka1/TalkTuner-chatbot-llm-dashboard\
+conda activate talktuner-gpu\
+export PYTHONPATH=$PWD:$PWD/src\
+export HF_HOME=/local/rkawaka1/hf-home\
+export HUGGINGFACE_HUB_CACHE=/local/rkawaka1/hf-cache\
+export TRANSFORMERS_CACHE=/local/rkawaka1/hf-cache\
+export TORCH_HOME=/local/rkawaka1/torch-cache\
+jupyter lab --port=XXXX --no-browser\
+
+then, detach with Ctrl-b d\
+come back with tmux attach -t talktuner
+
 
 
