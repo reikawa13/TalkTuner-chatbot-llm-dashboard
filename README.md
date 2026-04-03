@@ -30,4 +30,6 @@ conda activate talktuner-gpu\
 export PYTHONPATH=$PWD:$PWD/src\
 jupyter lab --port=XXXX --no-browser\
 
+Make sure to start the jupyter from the repo root. 
+
 
