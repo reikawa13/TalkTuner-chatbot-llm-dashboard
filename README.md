@@ -11,8 +11,8 @@
 - to deactivate: conda deactivate
 
 ### Starting Up
-ssh -L localhost:XXXX:localhost:XXXX USERNAME@kronos.cs.swarthmore.edu\
-cd local/USERNAME/TalkTuner-chatbot-llm-dashboard\
+ssh -L localhost:6013:localhost:6013 rkawaka1@kronos.cs.swarthmore.edu\
+cd /local/rkawaka1/TalkTuner-chatbot-llm-dashboard
 conda activate talktuner-gpu\
 export PYTHONPATH=$PWD:$PWD/src\
 jupyter lab --port=XXXX --no-browser\
