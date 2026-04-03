@@ -1,24 +1,25 @@
-# TalkTuner: Designing a Dashboard for Transparency and Control of Conversational AI
-This is the repository for the paper ["Designing a Dashboard for Transparency and Control of Conversational AI"](https://arxiv.org/abs/2406.07882) <img src="https://github.com/yc015/TalkTuner-chatbot-llm-dashboard/blob/doc/doc/walking_lulu.gif" style="width: 26px; display: inline-block; vertical-align: bottom;"/>
+# TalkTuner Experiments
+# Changes Made from the Original Code
+## Environment
+### Packages
+- baukit (pip install git+https://github.com/davidbau/baukit.git)
+- torchaudio (torchaudio==2.4.1)
 
-Please see our project page for a video demo and other details: [https://yc015.github.io/TalkTuner-a-dashboard-ui-for-chatbot-llm/](https://yc015.github.io/TalkTuner-a-dashboard-ui-for-chatbot-llm/)
+### Computer 
+- /local on kronos
+- to activate the venv: conda activate talktuner-gpu
+- to deactivate: conda deactivate
 
-# To run the code
-You can create the python environment using the following code:  
-`conda env create -f environment.yml`
+### Starting Up
+ssh -L localhost:XXXX:localhost:XXXX USERNAME@kronos.cs.swarthmore.edu
+cd local/USERNAME/TalkTuner-chatbot-llm-dashboard
+conda activate talktuner-gpu
+export PYTHONPATH=$PWD:$PWD/src
+jupyter lab --port=XXXX --no-browser
 
-Please make sure you activate this environment before running any code in this repo:  
-`conda activate talktuner-gpu`
-
-**This repository is currently under construction.**
-
-## Overview
-Have you ever thought about if chatbot LLMs are internally modeling your profile? If they are, how might this model of you influence the answers they give to your questions?
-
-![https://github.com/yc015/TalkTuner-chatbot-llm-dashboard/blob/doc/doc/lulu_example_v3.gif](https://github.com/yc015/TalkTuner-chatbot-llm-dashboard/blob/doc/doc/lulu_example_v3.gif)
-
-We designed the TalkTuner interface to help users visualize and control the chatbot LLM's internal model of them.
-
-![https://github.com/yc015/TalkTuner-chatbot-llm-dashboard/blob/doc/doc/dashboard_overview.png](https://github.com/yc015/TalkTuner-chatbot-llm-dashboard/blob/doc/doc/dashboard_overview.png)
-Our dashboard interface allows user to monitor and control the chatbot's internal model of them.
-
+Then, 
+huggingface-cli login
+huggingface-cli whoami
+and type your hugginface token. Before logging out of your computer, make sure to run 
+huggingface-cli logout
+huggingface-cli whoami
