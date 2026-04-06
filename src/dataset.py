@@ -221,11 +221,11 @@ class TextDataset(Dataset):
                 text += f" I think the {prompt_translator[self.label_idf]} of this user is"
             with torch.no_grad():
                 ## tokenized version of the input text
-                ## TODO: changed max_length to 512 for testing
+                ## TODO: changed max_length to 512 or 1024 for testing
                 encoding = self.tokenizer(
                   text,
                   truncation=True,
-                  max_length=512,
+                  max_length=2048,
                   return_attention_mask=True,
                   return_tensors='pt'
                 )
