@@ -13,6 +13,22 @@ device = "cuda"
 torch_device = "cuda"
 
 
+def _load_state_dict(weight_path):
+    try:
+        return torch.load(weight_path, map_location="cpu", weights_only=True)
+    except TypeError:
+        return torch.load(weight_path, map_location="cpu")
+
+
+def _infer_input_dim(state_dict):
+    if "proj.0.weight" in state_dict:
+        return state_dict["proj.0.weight"].shape[1]
+    for value in state_dict.values():
+        if hasattr(value, "ndim") and value.ndim == 2:
+            return value.shape[1]
+    raise ValueError("Could not infer probe input_dim from checkpoint")
+
+
 def load_probe_classifier(model_func, input_dim, num_classes, weight_path, **kwargs):
     """
     Instantiate a ProbeClassification model and load its pretrained weights.
@@ -26,11 +42,13 @@ def load_probe_classifier(model_func, input_dim, num_classes, weight_path, **kwa
     - model: The ProbeClassification model with loaded weights.
     """
 
+    state_dict = _load_state_dict(weight_path)
+
     # Instantiate the model
     model = model_func(device, num_classes, input_dim, **kwargs)
     
     # Load the pretrained weights into the model
-    model.load_state_dict(torch.load(weight_path))
+    model.load_state_dict(state_dict)
     
     return model
 
@@ -42,8 +60,10 @@ num_classes = {"age": 4,
 
 
 def return_classifier_dict(directory, model_func, chosen_layer=None, mix_scaler=False, sklearn=False, **kwargs):
-    checkpoint_paths = os.listdir(directory)
-    # file_paths = [os.path.join(directory, file) for file in checkpoint_paths if file.endswith("pth")]
+    checkpoint_paths = sorted(
+        file for file in os.listdir(directory)
+        if file.endswith(".pth") and not file.endswith("_final.pth")
+    )
     classifier_dict = {}
     for i in range(len(checkpoint_paths)):
         category = checkpoint_paths[i][:checkpoint_paths[i].find("_")]
@@ -54,20 +74,26 @@ def return_classifier_dict(directory, model_func, chosen_layer=None, mix_scaler=
         if category not in classifier_dict.keys():
             classifier_dict[category] = {}
         if mix_scaler:
-            classifier_dict[category]["all"] = load_probe_classifier(model_func, 5120, 
+            state_dict = _load_state_dict(weight_path)
+            input_dim = _infer_input_dim(state_dict)
+            classifier_dict[category]["all"] = load_probe_classifier(model_func, input_dim,
                                                                      num_classes=num_class,
                                                                      weight_path=weight_path, **kwargs)
         else:
-            layer_num = int(checkpoint_paths[i][checkpoint_paths[i].rfind("_") + 1: checkpoint_paths[i].rfind(".pth")])
+            layer_num = int(
+                checkpoint_paths[i][checkpoint_paths[i].rfind("_") + 1: checkpoint_paths[i].rfind(".pth")]
+            )
 
             if chosen_layer is None or layer_num == chosen_layer:
                 try:
-                    classifier_dict[category][layer_num] = load_probe_classifier(model_func, 5120, 
+                    state_dict = _load_state_dict(weight_path)
+                    input_dim = _infer_input_dim(state_dict)
+                    classifier_dict[category][layer_num] = load_probe_classifier(model_func, input_dim,
                                                                                  num_classes=num_class,
                                                                                  weight_path=weight_path, **kwargs)
                 except Exception as e:
                     print(category)
-                    # print(e)
+                    print(e)
                         
     return classifier_dict
 
