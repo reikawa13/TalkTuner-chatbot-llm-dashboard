@@ -26,6 +26,9 @@ and type your hugginface token. Before logging out of your computer, make sure t
 huggingface-cli logout\
 huggingface-cli whoami\
 
+export GEMINI_API_KEY="your_key_here"\
+
+
 conda activate talktuner-gpu\
 export PYTHONPATH=$PWD:$PWD/src\
 jupyter lab --port=XXXX --no-browser\
