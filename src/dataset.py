@@ -260,22 +260,22 @@ class TextDataset(Dataset):
             last_acts = []
             if self.if_augmented: # save the last k tokens instead of just the final token's activations. This is for the augmented probe that takes in multiple tokens' activations as input.
                 if self.residual_stream:
-                    for layer_num in range(33):
+                    for layer_num in range(27):
                         last_acts.append(output["hidden_states"][layer_num][:, -self.k:].detach().cpu().clone().to(torch.float))
                     last_acts = torch.cat(last_acts, dim=0)
                 else:
                     last_acts.append(features['model.embed_tokens'].features[0][:, -self.k:].detach().cpu().clone().to(torch.float))
-                    for layer_num in range(1, 33):
+                    for layer_num in range(1, 27):
                         last_acts.append(features[f'model.layers.{layer_num - 1}.mlp'].features[0][:, -self.k:].detach().cpu().clone().to(torch.float))
                     last_acts = torch.cat(last_acts, dim=0)
             else:
                 if self.residual_stream:
-                    for layer_num in range(33):
+                    for layer_num in range(27):
                         last_acts.append(output["hidden_states"][layer_num][:, -1].detach().cpu().clone().to(torch.float))
                     last_acts = torch.cat(last_acts)
                 else:
                     last_acts.append(features['model.embed_tokens'].features[0][:, -1].detach().cpu().clone().to(torch.float))
-                    for layer_num in range(1, 33):
+                    for layer_num in range(1, 27):
                         last_acts.append(features[f'model.layers.{layer_num - 1}.mlp'].features[0][:, -1].detach().cpu().clone().to(torch.float))
                     last_acts = torch.cat(last_acts)
             
