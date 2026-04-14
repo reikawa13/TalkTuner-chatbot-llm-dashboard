@@ -225,7 +225,7 @@ class TextDataset(Dataset):
                 encoding = self.tokenizer(
                   text,
                   truncation=True,
-                  max_length=2048,
+                  max_length=1024,
                   return_attention_mask=True,
                   return_tensors='pt'
                 )
@@ -248,7 +248,7 @@ class TextDataset(Dataset):
                 # Skip lm_head: probe training uses hidden states, not next-token logits.
                 # Call the base transformer directly to reduce VRAM use during activation extraction.
                 # changed from self.model(...) to self.model.model(...)
-                output = self.model.model(input_ids=encoding['input_ids'].to("cuda"),
+                output = self.model(input_ids=encoding['input_ids'].to("cuda"),
                                     attention_mask=encoding['attention_mask'].to("cuda"),
                                     output_hidden_states=True,
                                     return_dict=True,
