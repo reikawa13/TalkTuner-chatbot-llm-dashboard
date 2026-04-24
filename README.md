@@ -22,5 +22,9 @@ As of the manipulated ouputs, we saw some differences across the dataset, althou
 
 For instance, when Qwen was asked to give advice for schooling in San Fransisco, the model suggested some of the best high schools in the entire San Fransisco area given high socioeconomic status of the user, while it listed out more mediocre public schools for low socioeconomic status. 
 
-## Mistral 7B
+### Mistral 7B
+TBA
+
+
+## Discussions
 TBA
